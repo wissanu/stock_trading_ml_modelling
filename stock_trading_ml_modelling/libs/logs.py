@@ -5,12 +5,12 @@ from pathlib import Path
 from stock_trading_ml_modelling.logger_config import LOGGER_CONFIG
 
 def _set_logger(filename, logger_conf=LOGGER_CONFIG):
-    logger_conf["handlers"]["file"]["filename"] = str(Path(__file__).parent.parent / "logs" / f"{filename}.log")
+    logger_conf["handlers"]["file"]["filename"] = str(Path(__file__).parent.parent.parent / "logs" / f"{filename}.log")
     logging.config.dictConfig(logger_conf)
     return logging.getLogger(str(filename))
 
 def default_logger():
-    logger_path = Path(__file__).parent.parent / "logs" / Path(__file__) \
+    logger_path = Path(__file__).parent.parent.parent / "logs" / Path(__file__) \
         .stem.upper()
     return _set_logger(logger_path, LOGGER_CONFIG)
 

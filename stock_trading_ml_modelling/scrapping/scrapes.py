@@ -18,7 +18,7 @@ def scrape_num_pages(ref:str="ftse100"):
 
 def scrape_tickers(num_pages, ref:str="ftse100"):
     row_li = []
-    for page in tqdm(range(1, num_pages+1), total=len(range(1, num_pages+1))):
+    for page in tqdm(range(1, num_pages+1), total=len(range(1, num_pages+1)), desc="Scrape tickers"):
         web_addr = CONFIG["web_addr"][ref].format(page)
         soup = get_soup(web_addr)
         #Collect the table

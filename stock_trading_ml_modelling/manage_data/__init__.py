@@ -7,9 +7,8 @@ from stock_trading_ml_modelling.config import CONFIG
 from stock_trading_ml_modelling.libs.logs import log
 from stock_trading_ml_modelling.utils.date import calc_date_window
 from stock_trading_ml_modelling.utils.timing import ProcessTime
-from stock_trading_ml_modelling.prices.get_data import all_df, fetch_daily_prices, fetch_weekly_prices, \
-    fetch_tickers
-from stock_trading_ml_modelling.prices.del_data import del_daily_prices, del_weekly_prices
+from stock_trading_ml_modelling.database.get_data import sqlaq_to_df
+from stock_trading_ml_modelling.database import ticker, ticker_market, daily_price, weekly_price
 from stock_trading_ml_modelling.libs.scrapping import get_day_prices, process_daily_prices, process_weekly_prices
 
 from stock_trading_ml_modelling.libs.manage_data import create_filtered_year_dates
@@ -45,15 +44,15 @@ def remove_duplicate_daily_prices():
     keeping the most recent (found by highest volume).
     """
     #Fetch all the tickers
-    tickers = all_df(fetch_tickers())
+    tickers = sqlaq_to_df(ticker.fetch())
     #Loop through tickers
-    for id in tqdm(tickers.id, total=tickers.shape[0]):
+    for id in tqdm(tickers.id, total=tickers.shape[0], desc="Remove duplicate daily prices"):
         #Fetch all prices
-        dp = all_df(fetch_daily_prices(ticker_ids=[id]))
+        dp = sqlaq_to_df(daily_price.fetch(ticker_ids=[id]))
         #Find duplicate dates
         dp_del = _find_duplicates(dp)
         #Delete the others
-        if del_daily_prices(dp_del.id.to_list()):
+        if daily_price.remove(dp_del.id.to_list()):
             log.info(f"Delted {dp_del.shape[0]} records from daily_price, ticker_id -> {id}")
         else:
             log.error(f"Unable to delete {dp_del.shape[0]} records from daily_price, ticker_id -> {id}")
@@ -63,15 +62,15 @@ def remove_duplicate_weekly_prices():
     keeping the most recent (found by highest volume).
     """
     #Fetch all the tickers
-    tickers = all_df(fetch_tickers())
+    tickers = sqlaq_to_df(ticker.fetch())
     #Loop through tickers
-    for id in tqdm(tickers.id, total=tickers.shape[0]):
+    for id in tqdm(tickers.id, total=tickers.shape[0], desc="Remove duplicate weekly prices"):
         #Fetch all prices
-        wp = all_df(fetch_weekly_prices(ticker_ids=[id]))
+        wp = sqlaq_to_df(weekly_price.fetch(ticker_ids=[id]))
         #Find duplicate dates
         wp_del = _find_duplicates(wp)
         #Delete the others
-        if del_weekly_prices(wp_del.id.to_list()):
+        if weekly_price.remove(wp_del.id.to_list()):
             log.info(f"Delted {wp_del.shape[0]} records from weekly_price, ticker_id -> {id}")
         else:
             log.error(f"Unable to delete {wp_del.shape[0]} records from weekly_price, ticker_id -> {id}")
@@ -91,7 +90,7 @@ def fill_price_gaps(
         cur_year += 1
     #Loop each year
     all_year_dates = pd.DataFrame([])
-    for year in tqdm(years, total=len(years)):
+    for year in tqdm(years, total=len(years), desc="Loop through years to find dates"):
         #establish bounding dates
         year_from_date = None if year != from_date.year else from_date
         year_to_date = None if year != to_date.year else to_date
@@ -103,15 +102,15 @@ def fill_price_gaps(
     all_year_dates = all_year_dates.sort_values(["date"]) \
         .reset_index(drop=True)
     #Fetch all the tickers
-    tickers = all_df(fetch_tickers())
+    tickers = sqlaq_to_df(ticker.fetch())
     #Loop through tickers
     errors = []
     run_time = ProcessTime()
-    for _,r in tqdm(tickers[["id","ticker"]].iterrows(), total=tickers.shape[0]):
+    for _,r in tqdm(tickers[["id","ticker"]].iterrows(), total=tickers.shape[0], desc="Filling in gaps"):
         log.info(f"Filling gaps in {r.id} -> {r.ticker}")
         try:
             #Fetch all prices
-            dp = all_df(fetch_daily_prices(ticker_ids=[r.id]))
+            dp = sqlaq_to_df(daily_price.fetch(ticker_ids=[r.id]))
             dp["date"] = dp.date.astype("datetime64[ns]")
             #Identify missing dates
             missing_dates = pd.merge(all_year_dates, dp[["date","id"]], on=["date"], how="left")

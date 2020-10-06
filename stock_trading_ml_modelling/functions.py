@@ -2,9 +2,9 @@
 import datetime as dt
 from pathlib import Path
 
-from stock_trading_ml_modelling.models import engine
-from stock_trading_ml_modelling.models import Session as session
-from stock_trading_ml_modelling.models.prices import create_db
+from stock_trading_ml_modelling.database.models import engine
+from stock_trading_ml_modelling.database.models import Session as session
+from stock_trading_ml_modelling.database.models.prices import create_db
 from stock_trading_ml_modelling.scrapping import full_scrape
 from stock_trading_ml_modelling.libs.logs import log
 from stock_trading_ml_modelling.libs.stock_filtering import filter_stocks
@@ -40,7 +40,7 @@ def find_buys():
 if __name__ == "__main__":
     # create_database()
     # remove_duplicate_prices()
-    # run_full_scrape()
+    run_full_scrape()
     # fill_all_price_gaps()
     find_buys()
     pass

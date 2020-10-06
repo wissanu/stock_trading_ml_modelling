@@ -5,14 +5,14 @@ from tqdm import tqdm
 
 from stock_trading_ml_modelling.config import CONFIG
 from sqlalchemy import create_engine
-from stock_trading_ml_modelling.prices.get_data import all_df, fetch_tickers, fetch_ticker_markets, \
-    fetch_daily_prices, fetch_weekly_prices
-from stock_trading_ml_modelling.prices.add_data import add_df
-from stock_trading_ml_modelling.models import engine, Session as session
-from stock_trading_ml_modelling.models.prices import create_db, Ticker, TickerMarket, DailyPrice, WeeklyPrice
+from stock_trading_ml_modelling.database.get_data import sqlaq_to_df
+from stock_trading_ml_modelling.database import ticker, ticker_market, daily_price, weekly_price
+from stock_trading_ml_modelling.database.add_data import _add_df
+from stock_trading_ml_modelling.database.models import engine, Session as session
+from stock_trading_ml_modelling.database.models.prices import create_db, Ticker, TickerMarket, DailyPrice, WeeklyPrice
 
 eng_old = create_engine(
-    f'sqlite:///{str(Path(CONFIG["files"]["store_path"]) / "prices_old.db")}'
+    f'sqlite:///{str(CONFIG["files"]["store_path"] / "prices_old.db")}'
 )
 old_session = scoped_session(sessionmaker(bind=eng_old, expire_on_commit=False))
 
@@ -20,24 +20,24 @@ old_session = scoped_session(sessionmaker(bind=eng_old, expire_on_commit=False))
 create_db(engine)
 
 #ticker
-ticker_df = all_df(fetch_tickers(), session=old_session)
+ticker_df = sqlaq_to_df(ticker.fetch(), session=old_session)
 #add to the new database
-add_df(ticker_df, Ticker)
+_add_df(ticker_df, Ticker)
 
 #ticker_market
-ticker_market_df = all_df(fetch_ticker_markets(), session=old_session)
+ticker_market_df = sqlaq_to_df(ticker_market.fetch(), session=old_session)
 #add to the new database
-add_df(ticker_market_df, TickerMarket)
+_add_df(ticker_market_df, TickerMarket)
 
 #daily_price
 for id in tqdm(ticker_df.id, total=ticker_df.shape[0]):
-    daily_price_df = all_df(fetch_daily_prices(ticker_ids=[id]), session=old_session)
+    daily_price_df = sqlaq_to_df(daily_price.fetch(ticker_ids=[id]), session=old_session)
     #add to the new database
-    add_df(daily_price_df, DailyPrice)
+    _add_df(daily_price_df, DailyPrice)
 
 #weekly_price
 for id in tqdm(ticker_df.id, total=ticker_df.shape[0]):
-    weekly_price_df = all_df(fetch_weekly_prices(ticker_ids=[id]), session=old_session)
+    weekly_price_df = sqlaq_to_df(weekly_price.fetch(ticker_ids=[id]), session=old_session)
     #add to the new database
-    add_df(weekly_price_df, WeeklyPrice)
+    _add_df(weekly_price_df, WeeklyPrice)
 

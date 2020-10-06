@@ -1,5 +1,5 @@
 """Config file for running scripts"""
-
+from pathlib import Path
 import datetime as dt
 from numpy import linspace
 from skopt import space
@@ -15,8 +15,9 @@ CONFIG = {
         "max_days":140,
     },
     'files':{
-        "store_path":r"data"
-        ,"log_path":r"logs"
+        "store_path":Path(__file__).parent.parent / r"data"
+        ,"log_path":Path(__file__).parent.parent / r"logs"
+        ,"out_path":Path(__file__).parent.parent / r"out"
         ,"tick_ftse":r"tick_ftse.csv"
         ,"hist_prices_d":r"all_hist_prices_d.h5"
         ,"hist_prices_d_tmp":r"all_hist_prices_d_TMP.h5"

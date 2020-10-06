@@ -5,7 +5,8 @@ import pandas as pd
 from stock_trading_ml_modelling.utils.date import create_full_year_days, calc_wk_st_date
 from stock_trading_ml_modelling.libs.logs import log
 from stock_trading_ml_modelling.scrapping.scrape_data import get_public_holidays
-from stock_trading_ml_modelling.prices.get_data import all_df, fetch_daily_prices, fetch_weekly_prices
+from stock_trading_ml_modelling.database.get_data import sqlaq_to_df
+from stock_trading_ml_modelling.database import daily_price, weekly_price
 
 def filter_year_dates(year, year_dates):
     """Function to filter out weekends and bank holidays from year dates
@@ -122,7 +123,7 @@ def split_day_prices(new_dp_df, ticker_ids=[], from_date=None, to_date=None):
     pandas dataframe, pandas dataframe
     """
     #Grab the existing data from the table
-    dp_df = all_df(fetch_daily_prices(
+    dp_df = sqlaq_to_df(daily_price.fetch(
         ticker_ids=ticker_ids,
         from_date=from_date,
         to_date=to_date
@@ -153,7 +154,7 @@ def split_week_prices(ticker_ids=[], from_date=None, to_date=None):
     ------
     pandas dataframe, pandas dataframe
     """
-    dp_df = all_df(fetch_daily_prices(
+    dp_df = sqlaq_to_df(daily_price.fetch(
         ticker_ids=ticker_ids,
         from_date=from_date,
         to_date=to_date
@@ -161,7 +162,7 @@ def split_week_prices(ticker_ids=[], from_date=None, to_date=None):
     _, new_wp_df = daily_to_weekly_price_conversion(dp_df, )
 
     #Grab the existing data from the table
-    wp_df = all_df(fetch_weekly_prices(
+    wp_df = sqlaq_to_df(weekly_price.fetch(
         ticker_ids=ticker_ids,
         from_date=from_date,
         to_date=to_date

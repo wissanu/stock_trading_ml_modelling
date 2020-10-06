@@ -1,10 +1,8 @@
 """Functions for adding data to the database"""
 import pandas as pd
 
-from stock_trading_ml_modelling.prices.get_data import all_df, fetch_tickers, fetch_ticker_markets, \
-    fetch_daily_prices, fetch_weekly_prices
-from stock_trading_ml_modelling.prices.add_data import add_ticker_df, add_ticker_market_df, add_daily_price_df, \
-    add_weekly_price_df
+from stock_trading_ml_modelling.database.get_data import sqlaq_to_df
+from stock_trading_ml_modelling.database import ticker, ticker_market, daily_price, weekly_price
 from stock_trading_ml_modelling.libs.logs import log
 
 def create_new_tickers(tick_scrape):
@@ -20,7 +18,7 @@ def create_new_tickers(tick_scrape):
     pandas dataframe - extract from database afetr update
     """
     #Check if ticker exists, if not add it to the ticker table
-    tick_db = all_df(fetch_tickers())
+    tick_db = sqlaq_to_df(ticker.fetch())
     #add the id to the tick_ftse table
     new_tick = pd.merge(
         tick_scrape,
@@ -32,9 +30,9 @@ def create_new_tickers(tick_scrape):
     new_tick = new_tick[new_tick.id.isnull()]
     log.info(f"{new_tick.shape[0]} items to add to ticker")
     #add to db
-    add_ticker_df(new_tick)
+    ticker.add_df(new_tick)
     #fetch updated table
-    tick_db = all_df(fetch_tickers())
+    tick_db = sqlaq_to_df(ticker.fetch())
     return tick_db
 
 def create_new_ticker_markets(tick_db=pd.DataFrame([])):
@@ -50,9 +48,9 @@ def create_new_ticker_markets(tick_db=pd.DataFrame([])):
     pandas dataframe - extract from database afetr update
     """
     if not tick_db.shape[0]:
-        tick_db = all_df(fetch_tickers())
+        tick_db = sqlaq_to_df(ticker.fetch())
     #Check if ticker mrket exists, if not add it to the ticker_market table
-    tick_market_db = all_df(fetch_ticker_markets())
+    tick_market_db = sqlaq_to_df(ticker_market.fetch())
     #find ticker markets which don't exist
     new_tick_market = pd.merge(
         tick_db.rename(columns={"id":"ticker_id"}),
@@ -63,7 +61,7 @@ def create_new_ticker_markets(tick_db=pd.DataFrame([])):
     new_tick_market = new_tick_market[new_tick_market.id.isnull()]
     log.info(f"{new_tick_market.shape[0]} items to add to ticker_market")
     #add to db
-    add_ticker_market_df(new_tick_market)
+    ticker_market.add_df(new_tick_market)
     #fetch updated table
-    tick_market_db = all_df(fetch_ticker_markets())
+    tick_market_db = sqlaq_to_df(ticker_market.fetch())
     return tick_market_db

@@ -1,9 +1,13 @@
 #Module specific
-data/
-logs/
-out/
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
+out/*
+!out/.gitkeep
 archive/
 .vscode/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

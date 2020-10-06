@@ -3,7 +3,9 @@ from tqdm import tqdm
 
 from stock_trading_ml_modelling.utils.ft_eng import calc_macd
 from stock_trading_ml_modelling.libs.logs import log
-from stock_trading_ml_modelling.prices.get_data import all_df, fetch_daily_prices, fetch_tickers
+from stock_trading_ml_modelling.database.get_data import sqlaq_to_df
+from stock_trading_ml_modelling.database import ticker, ticker_market, daily_price, weekly_price
+
 
 def filter_stocks(from_date=None, to_date=None):
     """Function to search for shares to buy
@@ -18,8 +20,8 @@ def filter_stocks(from_date=None, to_date=None):
     pandas dataframe
     """
     #Fetch prices
-    prices_df = all_df(fetch_daily_prices(from_date=from_date, to_date=to_date))
-    ticker_df = all_df(fetch_tickers()) \
+    prices_df = sqlaq_to_df(daily_price.fetch(from_date=from_date, to_date=to_date))
+    ticker_df = sqlaq_to_df(ticker.fetch()) \
         .rename(columns={"id":"ticker_id"})
 
     #Filter to keep only items which are current
@@ -37,7 +39,7 @@ def filter_stocks(from_date=None, to_date=None):
         .reset_index(drop=True)
 
     #Loop ticks and get results
-    for _,r in tqdm(ticks.iterrows(), total=ticks.shape[0]):
+    for _,r in tqdm(ticks.iterrows(), total=ticks.shape[0], desc="Loop stock to find buy signals"):
         tick_prices = prices_df[prices_df.ticker_id == r.ticker_id]
         #Calculate the short macd
         _, _, _, _, tick_prices["macd_short"] = calc_macd(tick_prices.close, ema_lng=26, ema_sht=12, sig_period=9)

@@ -6,7 +6,7 @@ from sqlalchemy import Column, Sequence, Integer, String, Float, Date, ForeignKe
 from sqlalchemy.orm import relationship
 from datetime import datetime as dt
 
-from stock_trading_ml_modelling.models import Base
+from stock_trading_ml_modelling.database.models import Base
 
 class Ticker(Base):
     __tablename__ = 'ticker'
@@ -44,7 +44,6 @@ class DailyPrice(Base):
     ticker_id = Column(Integer, ForeignKey('ticker.id'))
     #constraints
     UniqueConstraint('ticker_id', 'date', name='uix_1')
-
 
 class WeeklyPrice(Base):
     __tablename__ = 'weekly_price'

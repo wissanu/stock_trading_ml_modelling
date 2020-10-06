@@ -38,10 +38,9 @@ from stock_trading_ml_modelling.config import CONFIG
 from stock_trading_ml_modelling.libs.logs import log
 from stock_trading_ml_modelling.utils.timing import ProcessTime
 from stock_trading_ml_modelling.utils.date import calc_en_date, calc_st_date
-from stock_trading_ml_modelling.prices.get_data import all_df, fetch_latest_daily_prices, fetch_latest_weekly_prices
-from stock_trading_ml_modelling.prices.del_data import del_daily_prices
-from stock_trading_ml_modelling.prices.update_data import update_ticker_df
-from stock_trading_ml_modelling.models import Session as session
+from stock_trading_ml_modelling.database.get_data import sqlaq_to_df
+from stock_trading_ml_modelling.database import ticker, daily_price, weekly_price
+from stock_trading_ml_modelling.database.models import Session as session
 
 from stock_trading_ml_modelling.scrapping.scrape_data import get_tickers
 from stock_trading_ml_modelling.libs.scrapping import process_daily_prices, process_weekly_prices
@@ -59,7 +58,7 @@ def full_scrape():
     tick_db = create_new_tickers(tick_ftse, )
     #update ticker records with last seen date
     tick_ftse = pd.merge(tick_ftse, tick_db[["ticker","id"]], on="ticker")
-    update_ticker_df(tick_ftse)
+    ticker.update_df(tick_ftse)
     #create new records in the ticker_market table
     _ = create_new_ticker_markets(tick_ftse, )
     #Create a list of ticker ids
@@ -71,7 +70,7 @@ def full_scrape():
     log.info("\nSCRAPPING DAILY PRICES")
 
     #Make a call for all the latest dates
-    latest_dates_df = all_df(fetch_latest_daily_prices(session, ticker_ids=ticker_ids))
+    latest_dates_df = sqlaq_to_df(daily_price.fetch_latest(session, ticker_ids=ticker_ids))
     latest_dates_df["max_date"] = latest_dates_df.max_date.astype("datetime64")
     #Calc the en_date for today
     en_date = calc_en_date()
@@ -80,14 +79,14 @@ def full_scrape():
     else:
         latest_dates_df["st_date"] = dt.datetime(1970,1,1)
         #Delete existing data
-        del_daily_prices()
+        daily_price.remove()
 
     #Loop through the tickers in tick_ftse and for each one get the latest date of scrape.
     #Convert this date into a timestamp.
     #Scrape all new data and add to the database.
     dp_errors = []
     run_time = ProcessTime()
-    for _,r in tqdm(latest_dates_df.iterrows(), total=latest_dates_df.shape[0]):
+    for _,r in tqdm(latest_dates_df.iterrows(), total=latest_dates_df.shape[0], desc="Scrape daily prices"):
         log.info(f'\n{len(run_time.lap_li)} RUNNING FOR -> {r.id}, {r.ticker}')
         log.info(f'Latst date - {r.max_date}')
         try:
@@ -98,8 +97,7 @@ def full_scrape():
                 st_date=r.st_date,
                 en_date=en_date,
                 split_from_date=r.max_date,
-                split_to_date=None,
-                
+                split_to_date=None
                 )
         except Exception as e:
             log.error(e)
@@ -115,7 +113,7 @@ def full_scrape():
     log.info("\nSCRAPPING WEEKLY PRICES")
 
     #Make a call for all the latest dates
-    latest_dates_df = all_df(fetch_latest_weekly_prices(session, ticker_ids=ticker_ids))
+    latest_dates_df = sqlaq_to_df(weekly_price.fetch_latest(session, ticker_ids=ticker_ids))
     latest_dates_df["max_date"] = latest_dates_df.max_date.astype("datetime64")
 
     #Loop through the tickers in tick_ftse and for each one get the latest date of scrape.
@@ -123,7 +121,7 @@ def full_scrape():
     #Scrape all new data and add to the database.
     wp_errors = []
     run_time = ProcessTime()
-    for _,r in tqdm(latest_dates_df.iterrows(), total=latest_dates_df.shape[0]):
+    for _,r in tqdm(latest_dates_df.iterrows(), total=latest_dates_df.shape[0], desc="Process weekly prices"):
         log.info(f'\n{len(run_time.lap_li)} RUNNING FOR -> {r.id}, {r.ticker}')
         try:
             #Get new price data if neccesary

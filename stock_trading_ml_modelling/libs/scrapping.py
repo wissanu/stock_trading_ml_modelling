@@ -7,8 +7,7 @@ from stock_trading_ml_modelling.config import CONFIG
 from stock_trading_ml_modelling.libs.logs import log
 from stock_trading_ml_modelling.utils.date import create_sec_ref_li, conv_dt
 from stock_trading_ml_modelling.utils.str_formatting import str_to_float_format
-from stock_trading_ml_modelling.prices.add_data import add_daily_price_df, add_weekly_price_df
-from stock_trading_ml_modelling.prices.update_data import update_daily_prices, update_weekly_prices
+from stock_trading_ml_modelling.database import daily_price, weekly_price
 from stock_trading_ml_modelling.libs.manage_data import split_day_prices, split_week_prices
 
 from stock_trading_ml_modelling.scrapping.scrapes import scrape_prices 
@@ -113,10 +112,10 @@ def process_daily_prices(
                 to_date=split_to_date
             )
             #Update existing prices in the sql database
-            update_daily_prices(update_df)
+            daily_price.update_df(update_df)
             log.info(f"\nUPDATED {update_df.shape[0]} RECORDS IN daily_price: \n\tFROM {update_df.date.min()} \n\tTO {update_df.date.max()}")
             #Add new prices to the sql database
-            add_daily_price_df(append_df)
+            daily_price.add_df(append_df)
             log.info(f"\nADDED {append_df.shape[0]} NEW RECORDS TO daily_price: \n\tFROM {append_df.date.min()} \n\tTO {append_df.date.max()}")
         else:
             log.info('No new records found')
@@ -148,9 +147,9 @@ def process_weekly_prices(
     )
 
     #Update existing records
-    update_weekly_prices(update_df)
+    weekly_price.update_df(update_df)
     log.info(f"\nUPDATED {update_df.shape[0]} RECORDS IN weekly_price: \n\tFROM {update_df.date.min()} \n\tTO {update_df.date.max()}")
 
     #Add new prices to the sql database
-    add_weekly_price_df(append_df)
+    weekly_price.add_df(append_df)
     log.info(f"\nADDED {append_df.shape[0]} NEW RECORDS TO weekly_price: \n\tFROM {append_df.date.min()} \n\tTO {append_df.date.max()}")
