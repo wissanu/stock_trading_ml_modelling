@@ -27,7 +27,6 @@ import h5py
 import datetime as dt
 import mysql.connector as mysql
 import re
-import tables
 logging.info('Libraries loaded')
 
 #Setup the variables

@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import math
 import os
-import tables
 from rf_modules import *
 
 #Create a class for maintaining the value of the fund

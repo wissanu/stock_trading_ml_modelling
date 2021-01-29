@@ -10,7 +10,7 @@ from stock_trading_ml_modelling.utils.str_formatting import str_to_float_format
 from stock_trading_ml_modelling.database import daily_price, weekly_price
 from stock_trading_ml_modelling.libs.manage_data import split_day_prices, split_week_prices
 
-from stock_trading_ml_modelling.scrapping.scrapes import scrape_prices 
+from stock_trading_ml_modelling.scrapping.scrapes import ScrapePrices 
 
 #Get the price history for a specific ticker
 def get_day_prices(ticker:str, st_date:None, en_date:None):
@@ -26,20 +26,9 @@ def get_day_prices(ticker:str, st_date:None, en_date:None):
     pandas dataframe - contains all required prices
 
     """
-    #Get the time loops
-    sec_ref_li = create_sec_ref_li(st_date, en_date, days=CONFIG["scrape"]["max_days"])
-    log.info('Getting DAILY prices for -> {}'.format(ticker))
-    tick_df = pd.DataFrame([])
-    log.info('Number of webscrapes to perform -> {}'.format(len(sec_ref_li)))
-    #For each time frame perform a scrape
-    for i,secs in enumerate(sec_ref_li):
-        log.info('Making call {} -> {} - {}'.format(i, dt.datetime.fromtimestamp(secs[0]), dt.datetime.fromtimestamp(secs[1])))
-        _, new_tick_df = scrape_prices(ticker, st_secs=secs[0], en_secs=secs[1], )
-        log.info(f"{new_tick_df.shape[0]} new records found")
-        #break loop if no new records
-        if not new_tick_df.shape[0]:
-            break
-        tick_df = tick_df.append(new_tick_df)
+    log.info(f'Getting DAILY prices for -> {ticker} from {str(st_date)} to {str(en_date)}')
+    #Perform async scrapes
+    tick_df = ScrapePrices(ticker, st_date, en_date).scrape()
     #Check for rows - if none then return
     if not tick_df.shape[0]:
         log.warning("Early exit due to no new records being found")
@@ -51,7 +40,7 @@ def get_day_prices(ticker:str, st_date:None, en_date:None):
     tick_df['close'] = [str_to_float_format(v) for v in tick_df.close]
     tick_df['adj_close'] = [str_to_float_format(v) for v in tick_df.adj_close]
     tick_df['volume'] = [str_to_float_format(v) for v in tick_df.volume]
-    tick_df['change'] = tick_df.open - tick_df.close
+    tick_df['change'] = tick_df.close - tick_df.open
     #Reformat date
     tick_df['date'] = [conv_dt(v, date_or_time="short_date") for v in tick_df.date]
     #Add the ticker series

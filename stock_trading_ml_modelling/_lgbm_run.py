@@ -9,7 +9,6 @@ import math
 import lightgbm as lgb
 from sklearn.externals import joblib as jl
 import os
-import tables
 
 from rf_modules import *
 from stock_trading_ml_modelling.config import CONFIG
@@ -94,8 +93,5 @@ hf_store_name = CONFIG['files']['store_path'] + CONFIG['files']['signals_tmp']
 hf = pd.HDFStore(hf_store_name)
 df_prices.to_hdf(hf_store_name,key='data',append=True,min_itemsize=col_lens)
 hf.close()
-
-#close any open h5 files
-tables.file._open_files.close_all()
 
 replace_file(CONFIG['files']['store_path'] + CONFIG['files']['signals'],CONFIG['files']['store_path'] + CONFIG['files']['signals_tmp'])

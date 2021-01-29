@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import math
 import os
-import tables
 from rf_modules import *
 from stock_trading_ml_modelling.config import CONFIG
 from stock_trading_ml_modelling.libs.run_fund_funcs import *

@@ -24,7 +24,6 @@ class TickerCl:
         None
         """
         if df.shape[0]:
-            db_cols
             keep_cols = ['ticker','company']
             if 'last_seen_date' in df.columns:
                 keep_cols.append('last_seen_date')

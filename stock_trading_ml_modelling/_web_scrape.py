@@ -37,7 +37,6 @@ import requests as rq
 import re
 import datetime as dt
 import os
-import tables
 import sys
 
 from rf_modules import *
@@ -48,9 +47,6 @@ from stock_trading_ml_modelling.utils.ft_eng import calc_ema,calc_macd,calc_ema_
 ######################################################
 ### DELETE THE OLD TEMPORARY FILES (IF THEY EXIST) ###
 ######################################################
-
-#close any open h5 files
-tables.file._open_files.close_all()
 
 #Delete the old h5 files
 try:
@@ -206,9 +202,6 @@ group_name_d = r'data'
 hf_store_name_w = CONFIG['files']['store_path'] + CONFIG['files']['hist_prices_w_tmp']
 hf_w = pd.HDFStore(hf_store_name_w)
 group_name_w = r'data'
-
-#close any open h5 files
-tables.file._open_files.close_all()
 
 #Scrape daily price data
 out_cols = ['ticker','date','open','close','high','low','change','volume','week_start_date']

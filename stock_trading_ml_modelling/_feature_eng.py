@@ -4,7 +4,6 @@
 import pandas as pd
 import numpy as np
 import re
-import tables
 import os
 import datetime as dt
 
@@ -504,9 +503,6 @@ if len(errors) > 0:
     print('\tERRORS -> ')
     print(pd.DataFrame(errors))
 
-#close any open h5 files
-tables.file._open_files.close_all()
-
 #Check the final tmp table
 tmp_df = pd.read_hdf(hf_store_name,key='data',mode='r')
 print("")
@@ -514,9 +510,6 @@ print("FINAL HDFSTORE SIZE: {}".format(tmp_df.shape))
 print("FINAL SIGNAL COUNTS: \n{}".format(tmp_df.signal.value_counts()))
 print("FINAL NULL COUNTS: \n{}".format(tmp_df.isnull().sum()))
 h_store.close()
-
-#close any open h5 files
-tables.file._open_files.close_all()
 
 #Delete the old h5 file and rename the TMP
 replace_file(CONFIG['files']['store_path'] + CONFIG['files']['ft_eng_w'],CONFIG['files']['store_path'] + CONFIG['files']['ft_eng_w_tmp'])

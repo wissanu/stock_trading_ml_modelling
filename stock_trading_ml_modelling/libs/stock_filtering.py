@@ -1,11 +1,10 @@
 import pandas as pd
 from tqdm import tqdm
 
-from stock_trading_ml_modelling.utils.ft_eng import calc_macd
 from stock_trading_ml_modelling.libs.logs import log
 from stock_trading_ml_modelling.database.get_data import sqlaq_to_df
 from stock_trading_ml_modelling.database import ticker, ticker_market, daily_price, weekly_price
-
+from stock_trading_ml_modelling.data_eng.data import DataSet
 
 def filter_stocks(from_date=None, to_date=None):
     """Function to search for shares to buy
@@ -41,25 +40,42 @@ def filter_stocks(from_date=None, to_date=None):
     #Loop ticks and get results
     for _,r in tqdm(ticks.iterrows(), total=ticks.shape[0], desc="Loop stock to find buy signals"):
         tick_prices = prices_df[prices_df.ticker_id == r.ticker_id]
+        dataset = DataSet()
+        dataset.add_dataset(tick_prices.close, "close")
         #Calculate the short macd
-        _, _, _, _, tick_prices["macd_short"] = calc_macd(tick_prices.close, ema_lng=26, ema_sht=12, sig_period=9)
+        _, _, _, _, macd_short = dataset.close.calc_macd(ema_lng=26, ema_sht=12, sig_period=9)
+        dataset.add_dataset(macd_short, "macd_short")
+        #Normalise it
+        macd_short = dataset.macd_short.norm_data(dataset.close.data)
+        dataset.add_dataset(macd_short, "macd_short")
         #Calculate the long macd
-        _, _, _, _, tick_prices["macd_long"] = calc_macd(tick_prices.close, ema_lng=26*5, ema_sht=12*5, sig_period=9*5)
+        _, _, _, _, macd_long = dataset.close.calc_macd(ema_lng=26*5, ema_sht=12*5, sig_period=9*5)
+        dataset.add_dataset(macd_long, "macd_long")
+        #Normalise it
+        macd_short = dataset.macd_long.norm_data(dataset.close.data)
+        dataset.add_dataset(macd_long, "macd_long")
+        #Find the previous major macd high
+        #Find the short gradient since this high to the current position
+        #Find the previous major macd low
+        #Find the short gradient since this low to the current position
         #Calc gradients of macds
-        tick_prices["macd_short_grad"] = (tick_prices.macd_short - tick_prices.macd_short.shift(1)) / abs(tick_prices.macd_short)
-        tick_prices["macd_long_grad"] = (tick_prices.macd_long - tick_prices.macd_long.shift(1)) / abs(tick_prices.macd_long)
-        tick_prices["macd_long"] = tick_prices.macd_long / abs(tick_prices.close)
+        grad_macd_short = dataset.macd_short.calc_grad()
+        dataset.add_dataset(grad_macd_short, "grad_macd_short")
+        grad_macd_long = dataset.macd_long.calc_grad()
+        dataset.add_dataset(grad_macd_long, "grad_macd_long")
         #Identify if it is a buy signal
-        check1 = (tick_prices.iloc[-1].macd_short_grad > 0 \
-            and tick_prices.iloc[-2].macd_short_grad < 0
-            and tick_prices.iloc[-1].macd_long > 0)
+        check1 = (dataset.grad_macd_short.data.iloc[-1] > 0 \
+            and dataset.grad_macd_short.data.iloc[-2] < 0
+            and dataset.grad_macd_long.data.iloc[-1] > 0)
         if check1:
             buy.append({
                 "ticker":r.ticker,
                 "ticker_id":r.ticker_id,
-                "short_grad":tick_prices.iloc[-1].macd_short_grad,
-                "long_grad":tick_prices.iloc[-1].macd_long_grad,
-                "macd_long":tick_prices.iloc[-1].macd_long
+                "short_grad_pre":dataset.grad_macd_short.data.iloc[-2],
+                "short_grad_post":dataset.grad_macd_short.data.iloc[-1],
+                "short_grad_change":abs(dataset.grad_macd_short.data.iloc[-2]) + abs(dataset.grad_macd_short.data.iloc[-1]),
+                "long_grad":dataset.grad_macd_long.data.iloc[-1],
+                "macd_long":dataset.macd_long.data.iloc[-1]
             })
      
     #Put into a dataframe
