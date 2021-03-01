@@ -16,6 +16,10 @@ class Data:
         self.data = data
         self.lead_nan = 0
 
+    def __call__(self):
+        """Return the self.data attribute when called directly"""
+        return self.data
+
     def calc_consec_gain(self):
         """Function to mark the consecutive gains in a seres of data
         

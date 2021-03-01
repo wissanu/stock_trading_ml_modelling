@@ -43,4 +43,4 @@ if __name__ == "__main__":
     run_full_scrape()
     # fill_all_price_gaps()
     find_buys()
-    pass
+    exit()
