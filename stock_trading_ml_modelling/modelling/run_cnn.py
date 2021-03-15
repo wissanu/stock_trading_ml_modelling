@@ -31,7 +31,7 @@ training_data = TrainingData(
     limit_id=None,
     folder="cnn"
 )
-training_data.create_data(ticker_ids=range(5), weeks=70)
+training_data.create_data(weeks=70)
 training_data.save_data()
 training_data.load_data()
 

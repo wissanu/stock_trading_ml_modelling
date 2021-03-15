@@ -33,11 +33,12 @@ class TrainingData:
         self.y_test = None
         self.folder = folder
         self.window = window
+        self.ticker_ids = range(limit_id) if limit_id is not None else []
 
-    def create_data(self, ticker_ids:list=[], weeks=52*10, force=False):
+    def create_data(self, weeks=52*10, force=False):
         if self.prices is None or force:
             price_data = PriceData()
-            self.prices = price_data.get_prices(ticker_ids=ticker_ids, weeks=weeks)
+            self.prices = price_data.get_prices(ticker_ids=self.ticker_ids, weeks=weeks)
         #Loop tickers
         ticker_ids = self.prices.ticker_id.unique()
         for tick_id in tqdm(ticker_ids, total=ticker_ids.shape[0], desc="Create data for tickers"):
