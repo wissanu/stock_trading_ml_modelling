@@ -1,12 +1,11 @@
 #Module specific
-data/*
-!data/.gitkeep
-logs/*
-!logs/.gitkeep
-out/*
-!out/.gitkeep
+data/
+logs/
+out/
 archive/
 .vscode/
+requirements.txt
+venv.txt
 
 
 # Byte-compiled / optimized / DLL files

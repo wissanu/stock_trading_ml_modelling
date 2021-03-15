@@ -5,7 +5,7 @@ description = ""
 authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 beautifulsoup4 = "^4.9.3"
 joblib = "lightgbm"
 numpy = "sklearn"
@@ -19,6 +19,8 @@ pandas = "^1.2.1"
 nest-asyncio = "^1.5.1"
 aiohttp = "^3.7.3"
 requests = "^2.25.1"
+tensorflow = "^2.4.1"
+matplotlib = "^3.3.4"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
