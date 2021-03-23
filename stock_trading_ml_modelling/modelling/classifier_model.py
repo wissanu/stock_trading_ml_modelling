@@ -107,8 +107,8 @@ class ClassifierModel:
             ppv = tp / (tp + fp)
             print(f"ppv of {k} - {ppv:.4f} - tp {tp} - fp {fp} - tp + fn {(y == v).sum()}")
 
-    def predict(*args, **kwargs)
+    def predict(*args, **kwargs):
         self.model.predict(*args, **kwargs)
 
-    def evaluate(*args, **kwargs)
+    def evaluate(*args, **kwargs):
         self.model.evaluate(*args, **kwargs)
