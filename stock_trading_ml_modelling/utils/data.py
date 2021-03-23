@@ -1,4 +1,4 @@
-
+import numpy as np
 
 def overlap(li:list):
     out = [v for v in li[0] if v in li[1]]
@@ -25,9 +25,15 @@ def flatten_full(li):
             #Check for internal lists
             for v2 in flat_v:
                 if isinstance(v2, list):
-                    _ = [out_li.append(v3) for v3 in flatten(v2)]
+                    _ = [out_li.append(v3) for v3 in flatten_full(v2)]
                 else:
                     out_li.append(v2)
         else:
             out_li.append(v)
     return out_li
+
+def np_count_values(np_array):
+    x = np.array([1,1,1,2,2,2,5,25,1,1])
+    y = np.bincount(x)
+    ii = np.nonzero(y)[0]
+    return np.vstack((ii,y[ii])).T

@@ -1,6 +1,7 @@
 """File for self.data object. Computes and manipulates self.data"""
 import pandas as pd
 import numpy as np
+import pandas_ta as ta
 
 from stock_trading_ml_modelling.utils.ft_eng import calc_ema, calc_macd, calc_ema_macd
 
@@ -72,38 +73,78 @@ class Data:
 
     def calc_ema(self, period, lead_nan:int=0):
         """Function to create an ema series from the data"""
-        ema_data = calc_ema(self.data, period, self.lead_nan)
+        # ema_data = calc_ema(self.data, period, self.lead_nan)
+        ema_data = ta.ema(self.data, period)
+        ema_data = ema_data.fillna(0)
         return ema_data
 
-    def calc_macd(self, ema_sht:int, ema_lng:int, sig_period:int):
-        """Function to create a macd series from the data"""
-        macd_data = calc_macd(self.data, ema_lng, ema_sht, sig_period)
+    def calc_macd(self, ema_sht:int, ema_lng:int, sig_period:int, fillna:int=0):
+        """Function to create a macd dataframe from the data"""
+        # macd_data = calc_macd(self.data, ema_lng, ema_sht, sig_period)
+        macd_data = ta.macd(self.data, ema_sht, ema_lng, sig_period, fillna=fillna)
         return macd_data
+
+    def calc_rsi(self, length:int=14, fillna:int=50):
+        """Function to create a rsi series from the data"""
+        rsi_data = ta.rsi(self.data, length, fillna=fillna)
+        return rsi_data
 
     def calc_grad(self):
         """Function to create a gradient series from the data"""
         grad = (self.data - self.data.shift(1)) / abs(self.data)
         return grad
 
-    def build_moving_window_data(self, window=None, fillna=None):
-        """Converts a dataset into a multi-layered numpy array of values, one value for
-        each movement of the moving window"""
+    def bulk_data_for_moving_window(self, s, window:int=None, bulk_start:bool=False, bulk_val:float=np.nan):
+        """Bulks out the existing data to allow for a window to be created when
+        exiting data is not long enough
+        
+        args:
+        ----
+        s - pandas series
+        window - int:None - size of window
+        bulk_start - bool:False - should the data be bulked so that the first 
+            value is made to be the last item of the first window
+        bulk_val - float:np.nan - the value to bulk with
+        """
         if window is None:
             window = self.window
-        data = self.data
         #Adjust data shape to fill window
-        if data.shape[0] < window:
-            extra = window - data.shape[0]
-            a = pd.Series([np.nan] * extra)
-            data = pd.concat((data,a))
+        extra = 0
+        if bulk_start:
+            extra = window - 1
+        else:
+            if s.shape[0] < window:
+                extra = window - s.shape[0]
+        a = pd.Series([bulk_val] * extra)
+        data = pd.concat((a,s))
         #Calc the number of windows
         en_i = data.shape[0] - window + 1
+        return data, en_i, window
+
+    def build_moving_window_data(self, window:int=None, bulk_start:bool=False, bulk_val:float=np.nan):
+        """Converts a dataset into a multi-layered numpy array of values, one value for
+        each movement of the moving window"""
+        data, en_i, window = self.bulk_data_for_moving_window(self.data, window=window, bulk_val=bulk_val)
         #Iterate over self.data and create output
-        out = np.empty((en_i, window))
+        out = []
         index = []
-        for i,j in enumerate(range(en_i)):
-            out[i] = np.array([data.iloc[j:j+window]])
+        for j in range(en_i):
+            out.append(data.iloc[j:j+window])
             index.append(data.index[j+window-1])
+        out = np.array(out)
+        return index, out
+
+    def fetch_last_from_moving_window(self, window:int=None):
+        """Converts a dataset into a multi-layered numpy array of values, one value for
+        each movement of the moving window"""
+        data, en_i, window = self.bulk_data_for_moving_window(self.data, window=window)
+        #Iterate over self.data and create output
+        out = []
+        index = []
+        for j in range(en_i):
+            out.append(data.iloc[j+window-1])
+            index.append(data.index[j+window-1])
+        out = np.array(out)
         return index, out
 
     #Mark minimums and maximums

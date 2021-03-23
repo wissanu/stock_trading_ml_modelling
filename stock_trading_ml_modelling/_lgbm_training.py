@@ -11,7 +11,6 @@ import pandas as pd
 import numpy as np
 import re
 import datetime as dt
-import matplotlib.pyplot as plt
 from sklearn.externals import joblib as jl
 
 import lightgbm as lgb
